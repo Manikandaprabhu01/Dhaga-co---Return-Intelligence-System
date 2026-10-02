@@ -1,11 +1,27 @@
 import { useEffect, useState } from "react";
-import { api, type Dashboard, type OverviewAgent, type ReviewRow, type SkuDetail, type UploadResult } from "./api";
+import {
+  Gauge,
+  BarChart3,
+  LayoutDashboard,
+  ClipboardCheck,
+  Bot,
+  UploadCloud,
+  Sun,
+  Moon,
+} from "lucide-react";
+import { api, type Dashboard, type ReviewRow, type SkuDetail, type UploadResult } from "./api";
+import { OverallMetricsTopBar } from "./components/OverallMetricsTopBar";
+import { OverallMetricsView } from "./components/OverallMetricsView";
+import { ReturnMetricsView } from "./components/ReturnMetricsView";
+import { CommandCenterView } from "./components/CommandCenterView";
+import { ReviewQueueView } from "./components/ReviewQueueView";
 import { ResolutionAgentView } from "./components/ResolutionAgentView";
+import { UploadView } from "./components/UploadView";
 
-type Page = "metrics" | "dashboard" | "review" | "agent" | "upload";
+type Page = "overview" | "metrics" | "dashboard" | "review" | "agent" | "upload";
 
 export function App() {
-  const [page, setPage] = useState<Page>("metrics");
+  const [page, setPage] = useState<Page>("overview");
   const [data, setData] = useState<Dashboard | null>(null);
   const [sku, setSku] = useState("KURTI123");
   const [detail, setDetail] = useState<SkuDetail | null>(null);
@@ -15,27 +31,49 @@ export function App() {
   const [busy, setBusy] = useState(false);
   const [reviewSku, setReviewSku] = useState<string>("all");
 
+  const [theme, setTheme] = useState<"light" | "dark">(() => {
+    const saved = localStorage.getItem("dhaga-theme");
+    return saved === "dark" ? "dark" : "light";
+  });
+
+  useEffect(() => {
+    document.documentElement.setAttribute("data-theme", theme);
+    localStorage.setItem("dhaga-theme", theme);
+  }, [theme]);
+
+  function toggleTheme() {
+    setTheme((prev) => (prev === "light" ? "dark" : "light"));
+  }
+
   async function refresh() {
-    const next = await api.dashboard();
-    setData(next);
-    const review = await api.review();
-    setQueue(review.rows);
-    const chosen = next.skus.includes(sku) ? sku : next.skus[0];
-    if (chosen) {
-      setSku(chosen);
-      setDetail(await api.sku(chosen));
-    } else {
-      setDetail(null);
+    try {
+      const next = await api.dashboard();
+      setData(next);
+      const review = await api.review();
+      setQueue(review.rows);
+      const chosen = next.skus.includes(sku) ? sku : next.skus[0];
+      if (chosen) {
+        setSku(chosen);
+        setDetail(await api.sku(chosen));
+      } else {
+        setDetail(null);
+      }
+    } catch (err: any) {
+      setError(err instanceof Error ? err.message : "Failed to load dashboard data.");
     }
   }
 
   useEffect(() => {
-    refresh().catch((err: Error) => setError(err.message));
+    refresh();
   }, []);
 
   async function chooseSku(value: string) {
     setSku(value);
-    setDetail(await api.sku(value));
+    try {
+      setDetail(await api.sku(value));
+    } catch (err: any) {
+      console.error(err);
+    }
   }
 
   async function act(id: string, kind: "approve" | "dismiss" | "edit", label?: string) {
@@ -81,19 +119,39 @@ export function App() {
   }
 
   const titles: Record<Page, [string, string]> = {
-    metrics: ["Return metrics", "The brief’s rates next to what this file made visible. Colour is the signal."],
-    dashboard: ["Return Intelligence", "This file: what was loaded, which SKU to work on, and what still needs Neha."],
-    review: ["Review queue", "Work by SKU. Approve, edit, or dismiss. Dismissed rows never enter the counts."],
-    agent: ["Autonomous Resolution Agent", "Negotiation Agent intercepts return inquiries on WhatsApp in <15s with 1-click doorstep exchange from nearby micro-hubs before reverse freight is incurred. Escalates to AI voice calling at 4h."],
-    upload: ["Upload a returns file", "Other comments only. Live classification runs when both model keys are set."],
+    overview: [
+      "Overall Brand Metrics & Control Room",
+      "Executive overview: 31% macro return baseline, 74% doorstep exchange conversion, and reverse freight preservation across Bangalore micro-hubs.",
+    ],
+    metrics: [
+      "Return metrics & Financial Modeling",
+      "Macro return rates, interactive RTO freight calculator, Hinglish keyword signals, and audio brief.",
+    ],
+    dashboard: [
+      "Command Center & Sizing Diagnostics",
+      "Per-SKU pattern variance, size distribution heatmaps, customer quote translation, and vendor notice memos.",
+    ],
+    review: [
+      "Human-in-the-Loop Review Queue",
+      "Audit model classifications under 75% or with validation errors. Search, keyboard shortcuts, and batch approvals.",
+    ],
+    agent: [
+      "Autonomous Resolution Agent",
+      "WhatsApp negotiation within 15s with 1-click doorstep exchange from nearby micro-hubs before reverse freight is incurred. Escalates to AI voice calling at 4h.",
+    ],
+    upload: [
+      "Returns Ingestion & Pipeline Bench",
+      "1-Click test batches, live CSV dropzone preview, parallel batch classification, and 75% auto-approval thresholding.",
+    ],
   };
 
-  const nav: { id: Page; label: string; badge?: string }[] = [
-    { id: "metrics", label: "Return metrics" },
-    { id: "dashboard", label: "Command center" },
-    { id: "review", label: "Review" },
-    { id: "agent", label: "Autonomous Agent", badge: "⚡ 15s" },
-    { id: "upload", label: "Upload" },
+  const nav: { id: Page; label: string; icon: React.ReactNode; badge?: string }[] = [
+    { id: "overview", label: "Overall metrics", icon: <Gauge size={17} /> },
+    { id: "metrics", label: "Return metrics", icon: <BarChart3 size={17} /> },
+    { id: "dashboard", label: "Command center", icon: <LayoutDashboard size={17} /> },
+    { id: "review", label: "Review", icon: <ClipboardCheck size={17} /> },
+    { id: "agent", label: "Autonomous Agent", icon: <Bot size={17} />, badge: "⚡ 15s" },
+    { id: "upload", label: "Upload", icon: <UploadCloud size={17} /> },
   ];
 
   const visibleQueue = reviewSku === "all" ? queue : queue.filter((row) => row.sku === reviewSku);
@@ -102,34 +160,155 @@ export function App() {
     <div className="app">
       <aside className="side">
         <div className="brand">
-          <div className="mark">ध</div>
+          <div className="mark" style={{ position: "relative" }}>
+            <span>ध</span>
+            <span
+              style={{
+                position: "absolute",
+                bottom: -2,
+                right: -2,
+                background: "#22c55e",
+                width: 9,
+                height: 9,
+                borderRadius: "50%",
+                border: "2px solid var(--navy)",
+              }}
+              title="Autonomous Agents Active"
+            />
+          </div>
           <div>
-            <h1>Dhaga</h1>
+            <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+              <h1>Dhaga</h1>
+              <span
+                style={{
+                  fontSize: "10px",
+                  background: "rgba(255, 255, 255, 0.12)",
+                  color: "#ffaa88",
+                  padding: "1px 5px",
+                  borderRadius: "4px",
+                  fontWeight: 600,
+                  letterSpacing: "0.04em",
+                }}
+              >
+                &amp; CO.
+              </span>
+            </div>
             <p>Return Intelligence</p>
           </div>
         </div>
         <nav>
           {nav.map((item) => (
-            <button key={item.id} className={page === item.id ? "active" : ""} type="button" onClick={() => setPage(item.id)}>
-              {item.label}
-              {item.id === "review" ? <span className="badge">{queue.length}</span> : null}
-              {item.badge ? <span className="badge" style={{ background: '#128c7e', fontSize: '10px' }}>{item.badge}</span> : null}
+            <button
+              key={item.id}
+              className={page === item.id ? "active" : ""}
+              type="button"
+              onClick={() => setPage(item.id)}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                gap: "10px",
+                padding: "10px 12px",
+              }}
+            >
+              <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                <span
+                  style={{
+                    display: "grid",
+                    placeItems: "center",
+                    color: page === item.id ? "#ffaa88" : "#c9bfb4",
+                    transition: "color 0.15s ease",
+                  }}
+                >
+                  {item.icon}
+                </span>
+                <span style={{ fontWeight: page === item.id ? 600 : 400 }}>{item.label}</span>
+              </div>
+              <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                {item.id === "review" && queue.length > 0 ? (
+                  <span className="badge">{queue.length}</span>
+                ) : null}
+                {item.badge ? (
+                  <span
+                    className="badge"
+                    style={{ background: "#128c7e", fontSize: "10px", padding: "2px 6px" }}
+                  >
+                    {item.badge}
+                  </span>
+                ) : null}
+              </div>
             </button>
           ))}
         </nav>
-        <p className="side-note">For Neha, Category. Auto-approve files a label. It does not change a size chart or a listing.</p>
+
+        {/* Dark / Light Mode Switcher */}
+        <div style={{ marginTop: "auto", paddingTop: "14px", borderTop: "1px solid rgba(255,255,255,0.1)" }}>
+          <button
+            type="button"
+            onClick={toggleTheme}
+            style={{
+              width: "100%",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              padding: "10px 12px",
+              borderRadius: "12px",
+              background: theme === "dark" ? "#243640" : "#1f2d37",
+              color: "#f6f1ea",
+              border: "1px solid rgba(255,255,255,0.12)",
+              fontSize: "13px",
+              cursor: "pointer",
+            }}
+          >
+            <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+              {theme === "dark" ? <Moon size={16} color="#38bdf8" /> : <Sun size={16} color="#fbbf24" />}
+              <span style={{ fontWeight: 500 }}>{theme === "dark" ? "Dark Mode" : "Light Mode"}</span>
+            </div>
+            <span
+              style={{
+                fontSize: "11px",
+                background: "rgba(255,255,255,0.1)",
+                padding: "2px 8px",
+                borderRadius: "99px",
+                color: "#ffaa88",
+              }}
+            >
+              Switch
+            </span>
+          </button>
+        </div>
       </aside>
+
       <main className="main">
-        <p className="kicker">Internal · sample until a live file is classified</p>
+        {/* Persistent Overall Metrics Navigation Bar */}
+        <OverallMetricsTopBar
+          data={data}
+          theme={theme}
+          onToggleTheme={toggleTheme}
+          onNavigateToReview={() => setPage("review")}
+          onNavigateToMetrics={() => setPage("metrics")}
+        />
+
+        <p className="kicker">Dhaga &amp; Co. &bull; D2C Fashion Intelligence</p>
         <h2>{titles[page][0]}</h2>
         <p className="lede">{titles[page][1]}</p>
-        {data && page !== "metrics" && page !== "agent" ? <div className="banner">{data.sample_banner} Auto-approve threshold: {data.auto_approve_pct}%.</div> : null}
+
+        {data && page !== "metrics" && page !== "agent" && page !== "overview" ? (
+          <div className="banner">
+            {data.sample_banner} Auto-approve threshold: {data.auto_approve_pct}%.
+          </div>
+        ) : null}
+
         {error ? <div className="error">{error}</div> : null}
 
-        {page === "metrics" && data ? <ColourInsight data={data} /> : null}
+        {page === "overview" && data ? (
+          <OverallMetricsView data={data} onNavigate={(target) => setPage(target)} />
+        ) : null}
+
+        {page === "metrics" && data ? <ReturnMetricsView data={data} /> : null}
 
         {page === "dashboard" && data ? (
-          <CommandCenter
+          <CommandCenterView
             data={data}
             sku={sku}
             detail={detail}
@@ -139,7 +318,7 @@ export function App() {
         ) : null}
 
         {page === "review" && data ? (
-          <ReviewBoard
+          <ReviewQueueView
             data={data}
             queue={visibleQueue}
             reviewSku={reviewSku}
@@ -151,421 +330,15 @@ export function App() {
         {page === "agent" ? <ResolutionAgentView /> : null}
 
         {page === "upload" ? (
-          <section>
-            <div className="drop">
-              <div>
-                <h3>CSV of Other returns</h3>
-                <p className="lede">Columns: return_id, sku, category, vendor, size, return_reason, other_text. A sample lives at data/sample/returns_other.csv.</p>
-                <div style={{ display: "flex", gap: "10px", marginTop: "10px", flexWrap: "wrap" }}>
-                  <a
-                    href="/api/sample-csv"
-                    download="returns_other.csv"
-                    style={{
-                      background: "white",
-                      border: "1px solid var(--line)",
-                      borderRadius: "8px",
-                      padding: "6px 12px",
-                      fontSize: "13px",
-                      textDecoration: "none",
-                      color: "var(--ink)",
-                      fontWeight: 500,
-                    }}
-                  >
-                    ⬇ Download Sample returns_other.csv
-                  </a>
-                  <button
-                    type="button"
-                    onClick={onReset}
-                    disabled={busy}
-                    style={{
-                      background: "white",
-                      border: "1px solid var(--line)",
-                      borderRadius: "8px",
-                      padding: "6px 12px",
-                      fontSize: "13px",
-                      color: "var(--ink)",
-                      fontWeight: 500,
-                    }}
-                  >
-                    ↺ Reset to Default Sample Data
-                  </button>
-                </div>
-              </div>
-              <label className="file">
-                <input type="file" accept=".csv,text/csv" disabled={busy} onChange={(event) => {
-                  const file = event.target.files?.[0];
-                  if (file) onFile(file);
-                }} />
-              </label>
-            </div>
-            {data && !data.models_configured ? (
-              <div className="banner">MODEL_A and MODEL_B are not set. Uploading a file will not guess labels. The dashboard you see is the loaded sample.</div>
-            ) : null}
-            {upload?.agents ? (
-              <section className="agents">
-                <article className="card agent">
-                  <p className="kicker">Agent 1 · done</p>
-                  <h3>Intake</h3>
-                  <p>Loaded {upload.agents.intake.loaded} comments in {upload.agents.intake.batches} batches of {upload.agents.intake.batch_size}.</p>
-                </article>
-                <article className="card agent">
-                  <p className="kicker">Agent 2 · {upload.agents.review ? "done" : "waiting"}</p>
-                  <h3>Review</h3>
-                  <p>
-                    {upload.agents.review
-                      ? `Filed ${upload.agents.review.auto_approved} at ${upload.agents.review.threshold}% or above. Sent ${upload.agents.review.sent_to_neha} to Neha.`
-                      : "Did not classify. The dashboard is unchanged."}
-                  </p>
-                </article>
-                <article className="card agent">
-                  <p className="kicker">Agent 3 · {upload.agents.overview ? "done" : "waiting"}</p>
-                  <h3>Overview</h3>
-                  <p>
-                    {upload.agents.overview
-                      ? upload.agents.overview.headline
-                      : "Weekly brief runs after Review files labels."}
-                  </p>
-                </article>
-              </section>
-            ) : null}
-            {upload?.agents?.overview ? <WeeklyBrief overview={upload.agents.overview} /> : null}
-            {upload ? (
-              <article className="card" style={{ marginTop: 14 }}>
-                <h3>{upload.message}</h3>
-                <table>
-                  <tbody>
-                    <tr><th>Rows kept</th><td>{upload.kept}</td></tr>
-                    {upload.dropped.map((item) => (
-                      <tr key={item.reason}><th>{item.reason}</th><td>{item.count}</td></tr>
-                    ))}
-                  </tbody>
-                </table>
-                {upload.unclassified.length ? (
-                  <ul className="raw">
-                    {upload.unclassified.map((row) => (
-                      <li key={row.return_id}><strong>{row.sku}</strong> — {row.text || "(empty)"}</li>
-                    ))}
-                  </ul>
-                ) : null}
-              </article>
-            ) : null}
-          </section>
+          <UploadView
+            data={data}
+            upload={upload}
+            busy={busy}
+            onFile={onFile}
+            onReset={onReset}
+          />
         ) : null}
       </main>
     </div>
-  );
-}
-
-const AREA_TONE: Record<string, string> = {
-  "Fit and size": "rose",
-  Quality: "amber",
-  Colour: "violet",
-  "Copy and look": "blue",
-  "Not enough to act": "slate",
-  "Not a product issue": "green",
-};
-
-function ColourInsight({ data }: { data: Dashboard }) {
-  const report = data.insights;
-  const cards = [
-    { tone: "rose", label: "Return rate · brief", value: "31%", note: "Already on Neha’s desk. This file does not remeasure it." },
-    { tone: "amber", label: "Other · brief", value: "44%", note: "The unread bucket. The split below is this file only." },
-    { tone: "violet", label: "Labeled on this file", value: `${report.counted_pct}%`, note: `${report.counted} of ${data.total} comments now have a counted label.` },
-    { tone: "green", label: "Filed without a click", value: String(data.agents.review.auto_approved), note: `${report.still_with_neha} still with Neha. A filed label does not change a listing.` },
-  ];
-  return (
-    <section className="ink">
-      <WeeklyBrief overview={data.agents.overview} />
-      <div className="tones">
-        {cards.map((card) => (
-          <article className={`tone ${card.tone}`} key={card.label}>
-            <span>{card.label}</span>
-            <strong>{card.value}</strong>
-            <p>{card.note}</p>
-          </article>
-        ))}
-      </div>
-      <div className="ink-split">
-        <div className="ink-list">
-          {report.areas.filter((area) => area.count > 0).map((area) => (
-            <div className="ink-row" key={area.title}>
-              <span className={`swatch ${AREA_TONE[area.title] || "slate"}`} />
-              <div>
-                <div className="area-top">
-                  <span>{area.title}</span>
-                  <strong>{area.count} · {area.share_pct}%</strong>
-                </div>
-                <div className="track dark"><div className={`fill ${AREA_TONE[area.title] || "slate"}`} style={{ width: `${area.share_pct}%` }} /></div>
-                <p className="ink-quiet">{area.actionable ? area.note : "No catalogue action."}</p>
-              </div>
-            </div>
-          ))}
-        </div>
-        <div className="ink-notes">
-          <article className="ink-note">
-            <span>Financial impact</span>
-            <h3>Not calculated</h3>
-            <p>Rupees need a cost per product return from Dhaga. About ₹120 is a COD return-to-origin cost, a different problem.</p>
-          </article>
-          <article className="ink-note">
-            <span>Exchanges and resales</span>
-            <h3>Not in this file</h3>
-            <p>There is no exchange or resale field, so recovered value is not shown.</p>
-          </article>
-          <article className="ink-note">
-            <span>Trend</span>
-            <h3>One snapshot</h3>
-            <p>There is no earlier file, so this screen cannot say returns are improving or worsening. {report.leave_pct}% of counted rows need no catalogue change.</p>
-          </article>
-        </div>
-      </div>
-    </section>
-  );
-}
-
-function WeeklyBrief({ overview }: { overview: OverviewAgent }) {
-  return (
-    <section className="brief" aria-label="Weekly overview">
-      <p className="kicker">Agent 3 · Overview · {overview.source === "model" ? "model brief" : "from counted labels"}</p>
-      <h3>{overview.headline}</h3>
-      <div className="brief-grid">
-        <div>
-          <p className="brief-label">This week</p>
-          <ul>
-            {overview.bullets.map((item) => (
-              <li key={item}>{item}</li>
-            ))}
-          </ul>
-        </div>
-        <div>
-          <p className="brief-label">Watch</p>
-          <ul>
-            {(overview.watch.length ? overview.watch : ["No SKU cluster yet."]).map((item) => (
-              <li key={item}>{item}</li>
-            ))}
-          </ul>
-        </div>
-        <div>
-          <p className="brief-label">Neha’s actions</p>
-          <ul>
-            {(overview.actions.length ? overview.actions : ["Nothing queued."]).map((item) => (
-              <li key={item}>{item}</li>
-            ))}
-          </ul>
-        </div>
-      </div>
-      <p className="caveat">{overview.caveat}</p>
-    </section>
-  );
-}
-
-function CommandCenter({
-  data,
-  sku,
-  detail,
-  onSku,
-  onReview,
-}: {
-  data: Dashboard;
-  sku: string;
-  detail: SkuDetail | null;
-  onSku: (sku: string) => void;
-  onReview: () => void;
-}) {
-  const report = data.insights;
-  const focus = report.focus;
-  return (
-    <div className="command">
-      <section className="rail" aria-label="This file">
-        <div>
-          <span>Returns in this file</span>
-          <strong>{data.total}</strong>
-          <p>Other comments loaded for this run.</p>
-        </div>
-        <div>
-          <span>Counted</span>
-          <strong>{data.accepted}</strong>
-          <p>Auto-approved, or accepted by Neha.</p>
-        </div>
-        <div>
-          <span>Still open</span>
-          <strong>{data.in_review}</strong>
-          <p>Under 75%, or no score. Open Review to decide.</p>
-        </div>
-      </section>
-
-      <section className="split">
-        <article className="card">
-          <p className="kicker">Which products</p>
-          <h3>SKUs with the most counted returns</h3>
-          {report.products.length === 0 ? <p className="empty">No counted SKU yet.</p> : null}
-          {report.products.map((item) => (
-            <button key={item.sku} type="button" className={item.sku === sku ? "sku-row on" : "sku-row"} onClick={() => onSku(item.sku)}>
-              <span>
-                <strong>{item.sku}</strong>
-                <em>{item.vendor} · {item.top_title}</em>
-              </span>
-              <b>{item.count} · {item.share_pct}%</b>
-            </button>
-          ))}
-          {detail?.top_title ? (
-            <div className="sku-detail">
-              <div className="action"><strong>Suggested action. </strong>{detail.action}</div>
-              {detail.quotes.slice(0, 2).map((quote) => (
-                <blockquote key={quote.text}>
-                  “{quote.text}”
-                  <div className="meta">{quote.label} · {quote.confidence_pct == null ? "No score" : `${quote.confidence_pct}%`}</div>
-                </blockquote>
-              ))}
-            </div>
-          ) : null}
-        </article>
-        <article className="card">
-          <p className="kicker">Needs attention</p>
-          <h3>{focus ? focus.title : "No cluster yet"}</h3>
-          {focus ? (
-            <p className="report-line">
-              {focus.cluster} comments on {focus.sku}, size {focus.size}, {focus.vendor}, labeled {focus.label}. {focus.action}
-            </p>
-          ) : <p className="empty">Nothing counted yet.</p>}
-          {report.attention.map((item) => (
-            <div className="attn" key={`${item.sku}-${item.text}`}>
-              <p>“{item.text}”</p>
-              <div className="meta">{item.sku} · size {item.size} · {item.why}</div>
-            </div>
-          ))}
-          <button className="primary" type="button" onClick={onReview}>Open review</button>
-        </article>
-      </section>
-
-      <section className="agents">
-        <article className="card agent">
-          <p className="kicker">Agent · Intake</p>
-          <h3>Loaded the comments</h3>
-          <p>{data.agents.intake.detail}</p>
-        </article>
-        <article className="card agent">
-          <p className="kicker">Agent · Review</p>
-          <h3>Filed or sent to Neha</h3>
-          <p>{data.agents.review.detail} Filing a label does not change a listing.</p>
-        </article>
-        <article className="card agent">
-          <p className="kicker">Agent · Overview</p>
-          <h3>Weekly brief</h3>
-          <p>{data.agents.overview.detail} {data.agents.overview.headline}</p>
-        </article>
-      </section>
-      <WeeklyBrief overview={data.agents.overview} />
-    </div>
-  );
-}
-
-function ReviewBoard({
-  data,
-  queue,
-  reviewSku,
-  onSku,
-  onAct,
-}: {
-  data: Dashboard;
-  queue: ReviewRow[];
-  reviewSku: string;
-  onSku: (sku: string) => void;
-  onAct: (id: string, kind: "approve" | "dismiss" | "edit", label?: string) => Promise<void>;
-}) {
-  const board = data.insights.sku_board;
-  const auto = data.agents.review.auto_approved;
-  const open = data.in_review;
-  return (
-    <div className="review-board">
-      <section className="rail" aria-label="Review status">
-        <div>
-          <span>Auto-approved</span>
-          <strong>{auto}</strong>
-          <p>Filed at {data.auto_approve_pct}% or above. Already on the counts.</p>
-        </div>
-        <div>
-          <span>Still open</span>
-          <strong>{open}</strong>
-          <p>{data.insights.low_confidence} under 75%, {data.insights.no_score} with no score.</p>
-        </div>
-        <div>
-          <span>Showing now</span>
-          <strong>{queue.length}</strong>
-          <p>{reviewSku === "all" ? "All open rows." : `Only ${reviewSku}.`}</p>
-        </div>
-      </section>
-
-      <section className="sku-board">
-        <button type="button" className={reviewSku === "all" ? "sku-card on" : "sku-card"} onClick={() => onSku("all")}>
-          <span className="kicker">All SKUs</span>
-          <h3>Whole queue</h3>
-          <div className="sku-stats">
-            <div><b>{auto}</b><em>auto-approved</em></div>
-            <div><b>{open}</b><em>still open</em></div>
-          </div>
-        </button>
-        {board.map((item) => (
-          <button
-            key={item.sku}
-            type="button"
-            className={reviewSku === item.sku ? "sku-card on" : "sku-card"}
-            onClick={() => onSku(item.sku)}
-          >
-            <span className="kicker">{item.vendor}</span>
-            <h3>{item.sku}</h3>
-            <div className="sku-stats">
-              <div><b>{item.auto_approved}</b><em>auto-approved</em></div>
-              <div><b>{item.open}</b><em>still open</em></div>
-            </div>
-            {item.open > 0 ? <p className="quiet">Needs Neha on this SKU.</p> : <p className="quiet">Clear for this SKU.</p>}
-          </button>
-        ))}
-      </section>
-
-      <section className="stack">
-        {queue.length === 0 ? <p className="empty">Review is clear for this filter. Every remaining label is already counted.</p> : null}
-        {queue.map((row) => (
-          <ReviewCard key={row.id} row={row} options={data.label_options} onAct={onAct} />
-        ))}
-      </section>
-    </div>
-  );
-}
-
-function ReviewCard({
-  row,
-  options,
-  onAct,
-}: {
-  row: ReviewRow;
-  options: { label: string; title: string }[];
-  onAct: (id: string, kind: "approve" | "dismiss" | "edit", label?: string) => Promise<void>;
-}) {
-  const [label, setLabel] = useState(row.label || "insufficient_evidence");
-  const needsLabel = row.label == null;
-  return (
-    <article className="card review">
-      <header>
-        <div>
-          <p className="quote">“{row.other_text}”</p>
-          <div className="pills">
-            <span className="pill">{row.sku}</span>
-            <span className="pill">Size {row.size}</span>
-            <span className="pill">{row.vendor}</span>
-          </div>
-        </div>
-        <div>{row.confidence_pct == null ? "No score" : `Confidence ${row.confidence_pct}%`}</div>
-      </header>
-      <p className="warn">{row.short_reason}</p>
-      <div className="actions">
-        <button className="primary" type="button" disabled={needsLabel} onClick={() => onAct(row.id, "approve")}>Approve</button>
-        <select aria-label="Edit label" value={label} onChange={(event) => setLabel(event.target.value)}>
-          {options.map((option) => <option key={option.label} value={option.label}>{option.title}</option>)}
-        </select>
-        <button type="button" onClick={() => onAct(row.id, "edit", label)}>Save edit</button>
-        <button className="danger" type="button" onClick={() => onAct(row.id, "dismiss")}>Dismiss</button>
-      </div>
-    </article>
   );
 }
