@@ -84,7 +84,7 @@ export function OverallMetricsTopBar({
             cursor: 'pointer',
             border: '1px solid rgba(255,255,255,0.06)',
           }}
-          title="Macro apparel return rate from brief"
+          title="Macro return rate: 31% overall (Neha, Category Head) · 14,880 returns/wk"
         >
           <TrendingDown size={14} color="#fca5a5" />
           <span style={{ color: '#c9bfb4' }}>Return Rate:</span>
@@ -105,7 +105,7 @@ export function OverallMetricsTopBar({
             cursor: 'pointer',
             border: '1px solid rgba(255,255,255,0.06)',
           }}
-          title="Comments classified from Other returns"
+          title="44% of all returns land in 'Other' free-text dropdown · 6,547 returns/wk"
         >
           <RotateCcw size={14} color="#fcd34d" />
           <span style={{ color: '#c9bfb4' }}>Other Bucket:</span>
@@ -124,7 +124,7 @@ export function OverallMetricsTopBar({
             fontSize: '12px',
             border: '1px solid rgba(255,255,255,0.06)',
           }}
-          title="Auto-approved at 75% or above"
+          title="Auto-approved at 75% confidence threshold"
         >
           <CheckCircle2 size={14} color="#4ade80" />
           <span style={{ color: '#c9bfb4' }}>Auto-Approved:</span>
@@ -168,7 +168,7 @@ export function OverallMetricsTopBar({
             fontSize: '12px',
             border: '1px solid #166534',
           }}
-          title="Reverse courier freight saved at ₹140 per doorstep exchange"
+          title="Reverse courier logistics saved at ₹120 per return (Faizan, Head of Supply Chain)"
         >
           <ShieldCheck size={14} color="#86efac" />
           <span style={{ color: '#bbf7d0' }}>Freight Saved:</span>

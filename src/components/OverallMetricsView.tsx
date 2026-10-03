@@ -19,15 +19,17 @@ export function OverallMetricsView({
 }) {
   const report = data.insights;
 
-  // Funnel calculations based on 15,000 monthly units at 31% return rate
-  const monthlyOrders = 15000;
-  const macroReturnRate = 31;
-  const otherPct = 44;
-  const totalReturns = Math.round((monthlyOrders * macroReturnRate) / 100);
-  const otherReturns = Math.round((totalReturns * otherPct) / 100);
-  const doorstepSwaps = Math.round(otherReturns * 0.74);
-  const netRTO = totalReturns - doorstepSwaps;
-  const effectiveReturnRate = ((netRTO / monthlyOrders) * 100).toFixed(1);
+  // Funnel calculations based on 48,000 weekly orders (208,000 monthly) from Page 2
+  const weeklyOrders = 48000;
+  const macroReturnRate = 31; // Neha: 31% overall
+  const otherPct = 44; // Page 4: 44% in "Other"
+  const totalWeeklyReturns = Math.round((weeklyOrders * macroReturnRate) / 100); // 14,880
+  const otherReturns = Math.round((totalWeeklyReturns * otherPct) / 100); // 6,547
+  const doorstepSwaps = Math.round(otherReturns * 0.74); // 4,845
+  const netRTO = totalWeeklyReturns - doorstepSwaps;
+  const effectiveReturnRate = ((netRTO / weeklyOrders) * 100).toFixed(1);
+  const logisticsSavedLakhs = ((doorstepSwaps * 120) / 100000).toFixed(2);
+  const gmvPreservedLakhs = ((doorstepSwaps * 840) / 100000).toFixed(2);
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
@@ -48,29 +50,31 @@ export function OverallMetricsView({
               <span className="pill ok" style={{ background: '#103926', color: '#6ee7b7', border: '1px solid #1f6443' }}>
                 🟢 Executive Control Room
               </span>
-              <span style={{ fontSize: '12px', color: '#c9bfb4' }}>Dhaga &amp; Co. &bull; Bengaluru D2C Hub</span>
+              <span style={{ fontSize: '12px', color: '#c9bfb4' }}>
+                Dhaga &amp; Co. &bull; 48,000 orders/wk &bull; ₹310 Cr GMV Run-Rate
+              </span>
             </div>
             <h2 style={{ margin: '8px 0 4px', fontFamily: 'Fraunces, serif', fontSize: '28px', color: '#fff' }}>
               Overall Brand Return Intelligence &amp; Autonomous Recovery
             </h2>
             <p style={{ margin: 0, fontSize: '14px', color: '#c9bfb4', maxWidth: '780px', lineHeight: 1.5 }}>
-              Comprehensive performance across macro return rates, &ldquo;Other&rdquo; classification taxonomy, AI doorstep exchanges, and reverse logistics freight preservation.
+              44% of returns land in the unread &ldquo;Other&rdquo; box. Grounded in Neha&rsquo;s 31% return rate, Faizan&rsquo;s ₹120 reverse logistics cost, and 6,547 weekly &ldquo;Other&rdquo; comments.
             </p>
           </div>
 
           <div style={{ display: 'flex', gap: '10px' }}>
             <button
               type="button"
-              onClick={() => onNavigate('dashboard')}
+              onClick={() => onNavigate('metrics')}
               className="primary"
               style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', fontSize: '13px', padding: '8px 14px' }}
             >
-              <span>Command Center</span>
+              <span>Return Metrics &amp; Simulator</span>
               <ArrowRight size={14} />
             </button>
             <button
               type="button"
-              onClick={() => onNavigate('agent')}
+              onClick={() => onNavigate('dashboard')}
               style={{
                 background: '#243640',
                 color: '#ffaa88',
@@ -84,8 +88,7 @@ export function OverallMetricsView({
                 gap: '6px',
               }}
             >
-              <Zap size={14} />
-              <span>Autonomous Agent</span>
+              <span>Command Center</span>
             </button>
           </div>
         </div>
@@ -102,31 +105,31 @@ export function OverallMetricsView({
           <div style={{ background: '#1b2933', padding: '12px 14px', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.06)' }}>
             <span style={{ fontSize: '11px', color: '#ffaa88', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Baseline Return</span>
             <div style={{ fontSize: '24px', fontFamily: 'Fraunces, serif', color: '#fff', marginTop: '2px' }}>31.0%</div>
-            <span style={{ fontSize: '11px', color: '#a79c90' }}>COD apparel benchmark</span>
+            <span style={{ fontSize: '11px', color: '#a79c90' }}>14,880 returns/week</span>
           </div>
 
           <div style={{ background: '#1b2933', padding: '12px 14px', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.06)' }}>
             <span style={{ fontSize: '11px', color: '#4ade80', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Effective Net Return</span>
             <div style={{ fontSize: '24px', fontFamily: 'Fraunces, serif', color: '#4ade80', marginTop: '2px' }}>{effectiveReturnRate}%</div>
-            <span style={{ fontSize: '11px', color: '#6ee7b7' }}>-9.5% via Doorstep Swap</span>
+            <span style={{ fontSize: '11px', color: '#6ee7b7' }}>-10.1% via Doorstep Swap</span>
           </div>
 
           <div style={{ background: '#1b2933', padding: '12px 14px', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.06)' }}>
             <span style={{ fontSize: '11px', color: '#93c5fd', textTransform: 'uppercase', letterSpacing: '0.05em' }}>&ldquo;Other&rdquo; Inquiries</span>
             <div style={{ fontSize: '24px', fontFamily: 'Fraunces, serif', color: '#93c5fd', marginTop: '2px' }}>44%</div>
-            <span style={{ fontSize: '11px', color: '#a79c90' }}>100% analyzed &amp; parsed</span>
+            <span style={{ fontSize: '11px', color: '#a79c90' }}>6,547 comments/week</span>
           </div>
 
           <div style={{ background: '#1b2933', padding: '12px 14px', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.06)' }}>
             <span style={{ fontSize: '11px', color: '#fcd34d', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Auto-Approved</span>
             <div style={{ fontSize: '24px', fontFamily: 'Fraunces, serif', color: '#fcd34d', marginTop: '2px' }}>{data.agents.review.auto_approved}</div>
-            <span style={{ fontSize: '11px', color: '#a79c90' }}>{report.counted_pct}% of total comments</span>
+            <span style={{ fontSize: '11px', color: '#a79c90' }}>{report.counted_pct}% of file comments</span>
           </div>
 
           <div style={{ background: '#1b2933', padding: '12px 14px', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.06)' }}>
             <span style={{ fontSize: '11px', color: '#f87171', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Needs Neha</span>
             <div style={{ fontSize: '24px', fontFamily: 'Fraunces, serif', color: '#f87171', marginTop: '2px' }}>{data.in_review}</div>
-            <span style={{ fontSize: '11px', color: '#fca5a5' }}>Rows pending in Review</span>
+            <span style={{ fontSize: '11px', color: '#fca5a5' }}>Rows pending review</span>
           </div>
 
           <div style={{ background: '#1b2933', padding: '12px 14px', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.06)' }}>
@@ -141,13 +144,13 @@ export function OverallMetricsView({
       <section className="card" style={{ padding: '20px' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px' }}>
           <div>
-            <p className="kicker" style={{ margin: 0 }}>End-to-End Funnel</p>
+            <p className="kicker" style={{ margin: 0 }}>End-to-End Funnel Grounded in Brief</p>
             <h3 style={{ margin: '2px 0 0', fontSize: '18px', fontFamily: 'Fraunces, serif' }}>
-              Monthly Return Volume &amp; Autonomous Preservation Funnel
+              Weekly Return Volume &amp; Autonomous Preservation Funnel
             </h3>
           </div>
           <span className="pill" style={{ background: '#e6f4ec', color: '#1d6a48' }}>
-            Model: 15,000 Shipped Orders / Month
+            Model: 48,000 Shipped Orders / Week (Brief Page 2)
           </span>
         </div>
 
@@ -155,23 +158,23 @@ export function OverallMetricsView({
           <div style={{ background: '#f8f5f0', borderRadius: '12px', padding: '14px', border: '1px solid var(--line)' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: 'var(--muted)', fontSize: '12px' }}>
               <Package size={14} />
-              <span>1. Total Shipped</span>
+              <span>1. Weekly Orders</span>
             </div>
             <strong style={{ display: 'block', fontSize: '22px', fontFamily: 'Fraunces, serif', marginTop: '4px' }}>
-              15,000
+              48,000
             </strong>
-            <p style={{ margin: '4px 0 0', fontSize: '11px', color: 'var(--muted)' }}>D2C &amp; Marketplace orders</p>
+            <p style={{ margin: '4px 0 0', fontSize: '11px', color: 'var(--muted)' }}>₹310 Cr GMV run-rate</p>
           </div>
 
           <div style={{ background: '#fee2e2', borderRadius: '12px', padding: '14px', border: '1px solid #fecaca' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#991b1b', fontSize: '12px' }}>
               <TrendingDown size={14} />
-              <span>2. Initiated Returns</span>
+              <span>2. Weekly Returns</span>
             </div>
             <strong style={{ display: 'block', fontSize: '22px', fontFamily: 'Fraunces, serif', color: '#991b1b', marginTop: '4px' }}>
-              {totalReturns.toLocaleString('en-IN')} (31%)
+              {totalWeeklyReturns.toLocaleString('en-IN')} (31%)
             </strong>
-            <p style={{ margin: '4px 0 0', fontSize: '11px', color: '#7f1d1d' }}>Macro apparel return baseline</p>
+            <p style={{ margin: '4px 0 0', fontSize: '11px', color: '#7f1d1d' }}>Neha: 31% return rate</p>
           </div>
 
           <div style={{ background: '#fef3c7', borderRadius: '12px', padding: '14px', border: '1px solid #fde68a' }}>
@@ -182,7 +185,7 @@ export function OverallMetricsView({
             <strong style={{ display: 'block', fontSize: '22px', fontFamily: 'Fraunces, serif', color: '#92400e', marginTop: '4px' }}>
               {otherReturns.toLocaleString('en-IN')} (44%)
             </strong>
-            <p style={{ margin: '4px 0 0', fontSize: '11px', color: '#78350f' }}>Root-causes previously unparsed</p>
+            <p style={{ margin: '4px 0 0', fontSize: '11px', color: '#78350f' }}>Section 04: 44% in Other</p>
           </div>
 
           <div style={{ background: '#e0f2fe', borderRadius: '12px', padding: '14px', border: '1px solid #bae6fd' }}>
@@ -199,12 +202,12 @@ export function OverallMetricsView({
           <div style={{ background: '#dcfce7', borderRadius: '12px', padding: '14px', border: '1px solid #bbf7d0' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#15803d', fontSize: '12px' }}>
               <ShieldCheck size={14} />
-              <span>5. Reverse Freight Saved</span>
+              <span>5. Freight Preserved</span>
             </div>
             <strong style={{ display: 'block', fontSize: '22px', fontFamily: 'Fraunces, serif', color: '#15803d', marginTop: '4px' }}>
-              ₹{((doorstepSwaps * 140) / 100000).toFixed(2)} Lakhs
+              ₹{logisticsSavedLakhs} Lakhs/wk
             </strong>
-            <p style={{ margin: '4px 0 0', fontSize: '11px', color: '#14532d' }}>+ ₹18.1L Gross GMV preserved</p>
+            <p style={{ margin: '4px 0 0', fontSize: '11px', color: '#14532d' }}>+ ₹{gmvPreservedLakhs}L GMV retained/wk</p>
           </div>
         </div>
       </section>

@@ -124,8 +124,8 @@ export function App() {
       "Executive overview: 31% macro return baseline, 74% doorstep exchange conversion, and reverse freight preservation across Bangalore micro-hubs.",
     ],
     metrics: [
-      "Return metrics & Financial Modeling",
-      "Macro return rates, interactive RTO freight calculator, Hinglish keyword signals, and audio brief.",
+      'Return Metrics & The "Other" Category Breakdown',
+      "Grounded in Dhaga & Co. brief: 31% return rate (Neha), 44% in 'Other' (6,547/wk), ₹120 reverse logistics cost (Faizan), and 95.4% manual unread gap.",
     ],
     dashboard: [
       "Command Center & Sizing Diagnostics",
